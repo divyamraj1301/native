@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Text,
   View,
@@ -8,8 +8,10 @@ import {
   TextInput,
   FlatList,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import SingleTodo from "./components/SingleTodo";
 
-const App = () => {
+export default function App() {
   const [todo, setTodo] = useState("");
   const [todos, setTodos] = useState([]);
 
@@ -19,13 +21,22 @@ const App = () => {
     setTodo("");
   };
 
+  const getTodos = async () => {
+    const data = await AsyncStorage.getItem("todos");
+    if (data) setTodos(JSON.parse(data));
+  };
+
+  useEffect(() => {
+    getTodos();
+  }, []);
+
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>Todo List in Native</Text>
       <View style={styles.inputContainer}>
         <TextInput
-          onChangeText={(text) => setTodo(text)}
           value={todo}
+          onChangeText={(text) => setTodo(text)}
           placeholder="Enter a task"
           style={styles.input}
         />
@@ -33,19 +44,20 @@ const App = () => {
           <Text style={styles.button}>Go</Text>
         </TouchableOpacity>
       </View>
-      <View>
+
+      <View style={{ width: "100%", marginTop: 10 }}>
         <FlatList
           data={todos}
-          renderItem={({ item }) => <Text>{item.text}</Text>}
-          keyExtractor={(item) => item.id.toSring}
+          renderItem={({ item }) => (
+            <SingleTodo todos={todos} setTodos={setTodos} todo={item} />
+          )}
+          keyExtractor={(item) => item.id.toString()}
         />
       </View>
       <StatusBar style="auto" />
     </View>
   );
-};
-
-export default App;
+}
 
 const styles = StyleSheet.create({
   container: {
